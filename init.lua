@@ -438,6 +438,9 @@ require('lazy').setup({
             vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
             vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
             vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+            vim.keymap.set('n', '<leader>bl', function()
+                builtin.buffers { initial_mode = 'normal' }
+            end, { desc = '[ ] Find existing buffers' })
 
             -- Slightly advanced example of overriding default behavior and theme
             vim.keymap.set('n', '<leader>/', function()
@@ -806,7 +809,7 @@ require('lazy').setup({
 
                     -- If you prefer more traditional completion keymaps,
                     -- you can uncomment the following lines
-                    --['<CR>'] = cmp.mapping.confirm { select = true },
+                    ['<CR>'] = cmp.mapping.confirm { select = true },
                     --['<Tab>'] = cmp.mapping.select_next_item(),
                     --['<S-Tab>'] = cmp.mapping.select_prev_item(),
 
