@@ -413,11 +413,14 @@ require('lazy').setup({
                 -- You can put your default mappings / updates / etc. in here
                 --  All the info you're looking for is in `:help telescope.setup()`
                 --
-                -- defaults = {
-                --   mappings = {
-                --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-                --   },
-                -- },
+                defaults = {
+                    mappings = {
+                        i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+                        n = {
+                            ['<C-d>'] = require('telescope.actions').delete_buffer,
+                        },
+                    },
+                },
                 -- pickers = {}
                 extensions = {
                     ['ui-select'] = {
@@ -443,6 +446,10 @@ require('lazy').setup({
             vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
             vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
             vim.keymap.set('n', '<leader>bl', function()
+                builtin.buffers { initial_mode = 'normal', sort_mru = true }
+            end, { desc = '[ ] Find existing buffers' })
+
+            vim.keymap.set('n', '<leader>bb', function()
                 builtin.buffers { initial_mode = 'normal', sort_mru = true }
             end, { desc = '[ ] Find existing buffers' })
 
