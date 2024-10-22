@@ -168,7 +168,9 @@ vim.keymap.set('n', '<leader>gj', ':Gitsigns next_hunk<cr>')
 vim.keymap.set('n', '<leader>gk', ':Gitsigns prev_hunk<cr>')
 vim.keymap.set('n', '<leader>gb', ':Gitsigns toggle_current_line_blame<cr>')
 vim.keymap.set('n', '<leader>ef', ':Neotree action=show source=filesystem position=current toggle=true<cr>')
-
+vim.keymap.set('n', '<leader>td', function()
+    vim.diagnostic.enable(not vim.diagnostic.is_enabled())
+end, { silent = true, noremap = true })
 vim.keymap.set('n', '<leader>ee', function()
     local reveal_file = vim.fn.expand '%:p'
     if reveal_file == '' then
@@ -386,6 +388,7 @@ require('lazy').setup({
 
             -- Useful for getting pretty icons, but requires a Nerd Font.
             { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+            { 'SalOrak/whaler' },
         },
         config = function()
             -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -426,16 +429,32 @@ require('lazy').setup({
                     ['ui-select'] = {
                         require('telescope.themes').get_dropdown(),
                     },
+                    whaler = {
+                        -- Whaler configuration
+                        directories = {
+                            '/home/mateus/work/senff/',
+                            '/home/mateus/work/senff/senff-backend/src/2.Domain/',
+                        },
+                        file_explorer = 'neotree',
+                        -- You may also add directories that will not be searched for subdirectories
+                        oneoff_directories = {
+                            '/home/mateus/.config/nvim/',
+                        },
+                    },
                 },
             }
 
             -- Enable Telescope extensions if they are installed
             pcall(require('telescope').load_extension, 'fzf')
             pcall(require('telescope').load_extension, 'ui-select')
+            pcall(require('telescope').load_extension, 'whaler')
 
             -- See `:help telescope.builtin`
             local builtin = require 'telescope.builtin'
+            local telescope = require 'telescope'
             vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
+            vim.keymap.set('n', '<leader>fw', telescope.extensions.whaler.whaler)
+            vim.keymap.set('n', '<leader>sp', telescope.extensions.whaler.whaler)
             vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
             vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
             vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
