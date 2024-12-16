@@ -157,6 +157,8 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+vim.opt.sessionoptions="blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+
 vim.keymap.set('n', '<A-j>', ':move .+1<CR>==')
 vim.keymap.set('n', '<A-k>', ':move .-2<CR>==')
 -- [[ Basic Keymaps ]]
@@ -166,6 +168,11 @@ vim.keymap.set('v', 'p', '"_dP')
 vim.keymap.set('n', '<C-s>', ':w<cr>')
 vim.keymap.set('n', '<leader>gj', ':Gitsigns next_hunk<cr>')
 vim.keymap.set('n', '<leader>gk', ':Gitsigns prev_hunk<cr>')
+vim.keymap.set('n', '<leader>gr', ':Gitsigns reset_hunk<cr>')
+-- vim.keymap.set('n', '<leader>gR', ':Gitsigns reset_buffer<cr>')
+-- vim.keymap.set('n', '<leader>gs', ':Gitsigns stage_hunk<cr>')
+-- vim.keymap.set('n', '<leader>gu', ':Gitsigns undo_stage_hunk<cr>')
+vim.keymap.set('n', '<leader>gp', ':Gitsigns preview_hunk<cr>')
 vim.keymap.set('n', '<leader>gb', ':Gitsigns toggle_current_line_blame<cr>')
 vim.keymap.set('n', '<leader>ef', ':Neotree action=show source=filesystem position=current toggle=true<cr>')
 vim.keymap.set('n', '<leader>td', function()
@@ -388,7 +395,11 @@ require('lazy').setup({
 
             -- Useful for getting pretty icons, but requires a Nerd Font.
             { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+
+            -- gerenciador de projetos
             { 'SalOrak/whaler' },
+            -- diagnostic below line
+            { 'https://git.sr.ht/~whynothugo/lsp_lines.nvim' },
         },
         config = function()
             -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -420,9 +431,11 @@ require('lazy').setup({
                     mappings = {
                         i = { ['<c-enter>'] = 'to_fuzzy_refine' },
                         n = {
-                            ['<C-d>'] = require('telescope.actions').delete_buffer,
+                            ['<C-x>'] = require('telescope.actions').delete_buffer,
                         },
                     },
+          layout_strategy = 'vertical',
+                    layout_config = { height = 0.95, width = 0.95 },
                 },
                 -- pickers = {}
                 extensions = {
@@ -455,6 +468,7 @@ require('lazy').setup({
             vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
             vim.keymap.set('n', '<leader>fw', telescope.extensions.whaler.whaler)
             vim.keymap.set('n', '<leader>sp', telescope.extensions.whaler.whaler)
+            vim.keymap.set('n', '<leader>gs', builtin.git_status, { desc = '[G]it [S]tatus' })
             vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
             vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
             vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
@@ -494,6 +508,29 @@ require('lazy').setup({
             vim.keymap.set('n', '<leader>sn', function()
                 builtin.find_files { cwd = vim.fn.stdpath 'config' }
             end, { desc = '[S]earch [N]eovim files' })
+
+            vim.lsp.handlers['textDocument/publishDiagnostics'] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
+                -- Disable underline, it's very annoying
+                underline = false,
+                -- virtual_text = false,
+                -- Enable virtual text, override spacing to 4
+                -- virtual_text = {spacing = 4},
+                -- Use a function to dynamically turn signs off
+                -- and on, using buffer local variables
+                -- signs = true,
+                -- update_in_insert = false,
+            })
+            require('lsp_lines').setup()
+            vim.diagnostic.config { virtual_text = true, virtual_lines = false }
+
+            vim.keymap.set('', '<leader>l', function()
+                local config = vim.diagnostic.config() or {}
+                if config.virtual_text then
+                    vim.diagnostic.config { virtual_text = false, virtual_lines = true }
+                else
+                    vim.diagnostic.config { virtual_text = true, virtual_lines = false }
+                end
+            end, { desc = 'Toggle lsp_lines' })
         end,
     },
 
@@ -731,7 +768,7 @@ require('lazy').setup({
         cmd = { 'ConformInfo' },
         keys = {
             {
-                '<leader>f',
+                '<leader>fc',
                 function()
                     require('conform').format { async = true, lsp_format = 'fallback' }
                 end,
@@ -741,30 +778,42 @@ require('lazy').setup({
         },
         opts = {
             notify_on_error = false,
-            format_on_save = function(bufnr)
-                -- Disable "format_on_save lsp_fallback" for languages that don't
-                -- have a well standardized coding style. You can add additional
-                -- languages here or re-enable it for the disabled ones.
-                local disable_filetypes = { c = true, cpp = true }
-                local lsp_format_opt
-                if disable_filetypes[vim.bo[bufnr].filetype] then
-                    lsp_format_opt = 'never'
-                else
-                    lsp_format_opt = 'fallback'
-                end
-                return {
-                    timeout_ms = 500,
-                    lsp_format = lsp_format_opt,
-                }
-            end,
+            -- format_on_save = function(bufnr)
+            --     -- Disable "format_on_save lsp_fallback" for languages that don't
+            --     -- have a well standardized coding style. You can add additional
+            --     -- languages here or re-enable it for the disabled ones.
+            --     local disable_filetypes = { c = true, cpp = true, php = true }
+            --     local lsp_format_opt
+            --     if disable_filetypes[vim.bo[bufnr].filetype] then
+            --         lsp_format_opt = 'never'
+            --     else
+            --         lsp_format_opt = 'fallback'
+            --     end
+            --     return {
+            --         timeout_ms = 500,
+            --         lsp_format = lsp_format_opt,
+            --     }
+            -- end,
             formatters_by_ft = {
-                -- php = { 'pint' },
+                php = { 'pint', 'php-cs-fixer' },
                 lua = { 'stylua' },
+
                 -- Conform can also run multiple formatters sequentially
                 -- python = { "isort", "black" },
                 --
                 -- You can use 'stop_after_first' to run the first available formatter from the list
                 -- javascript = { "prettierd", "prettier", stop_after_first = true },
+            },
+            formatters = {
+                ['php-cs-fixer'] = {
+                    command = 'php-cs-fixer',
+                    args = {
+                        'fix',
+                        '--rules=@PSR12', -- Formatting preset. Other presets are available, see the php-cs-fixer docs.
+                        '$FILENAME',
+                    },
+                    stdin = false,
+                },
             },
         },
     },
