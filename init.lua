@@ -157,7 +157,7 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
-vim.opt.sessionoptions="blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+vim.opt.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
 
 vim.keymap.set('n', '<A-j>', ':move .+1<CR>==')
 vim.keymap.set('n', '<A-k>', ':move .-2<CR>==')
@@ -175,9 +175,14 @@ vim.keymap.set('n', '<leader>gr', ':Gitsigns reset_hunk<cr>')
 vim.keymap.set('n', '<leader>gp', ':Gitsigns preview_hunk<cr>')
 vim.keymap.set('n', '<leader>gb', ':Gitsigns toggle_current_line_blame<cr>')
 vim.keymap.set('n', '<leader>ef', ':Neotree action=show source=filesystem position=current toggle=true<cr>')
-vim.keymap.set('n', '<leader>td', function()
+vim.keymap.set('n', '<leader>tD', function()
     vim.diagnostic.enable(not vim.diagnostic.is_enabled())
-end, { silent = true, noremap = true })
+end, { silent = true, noremap = true, desc = 'Toggle diagnostics' })
+
+vim.keymap.set('n', '<leader>td', function()
+  vim.diagnostic.config { virtual_text = not vim.diagnostic.config().virtual_text }
+end, { silent = true, noremap = true, desc = 'Toggle diagnostics' })
+
 vim.keymap.set('n', '<leader>ee', function()
     local reveal_file = vim.fn.expand '%:p'
     if reveal_file == '' then
@@ -199,6 +204,11 @@ vim.keymap.set('n', '<leader>ee', function()
         toggle = true,
     }
 end, { desc = 'Open neo-tree at current file or working directory' })
+
+-- next diagnostic
+vim.keymap.set('n', ']e', ':lua vim.diagnostic.goto_next()<CR>')
+-- previous diagnostic
+vim.keymap.set('n', '[e', ':lua vim.diagnostic.goto_prev()<CR>')
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
@@ -434,7 +444,7 @@ require('lazy').setup({
                             ['<C-x>'] = require('telescope.actions').delete_buffer,
                         },
                     },
-          layout_strategy = 'vertical',
+                    layout_strategy = 'vertical',
                     layout_config = { height = 0.95, width = 0.95 },
                 },
                 -- pickers = {}
@@ -517,18 +527,20 @@ require('lazy').setup({
                 -- virtual_text = {spacing = 4},
                 -- Use a function to dynamically turn signs off
                 -- and on, using buffer local variables
-                -- signs = true,
+                signs = true,
                 -- update_in_insert = false,
             })
             require('lsp_lines').setup()
-            vim.diagnostic.config { virtual_text = true, virtual_lines = false }
 
-            vim.keymap.set('', '<leader>l', function()
+            -- vim.diagnostic.config { virtual_text = false, virtual_lines = false }
+
+            vim.keymap.set('n', 'H', '<cmd>lua vim.diagnostic.open_float()<CR>', { desc = 'Toggle float' })
+            vim.keymap.set('', '<leader>tl', function()
                 local config = vim.diagnostic.config() or {}
                 if config.virtual_text then
                     vim.diagnostic.config { virtual_text = false, virtual_lines = true }
                 else
-                    vim.diagnostic.config { virtual_text = true, virtual_lines = false }
+                    vim.diagnostic.config { virtual_text = false, virtual_lines = false }
                 end
             end, { desc = 'Toggle lsp_lines' })
         end,
