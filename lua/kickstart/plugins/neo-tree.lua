@@ -15,8 +15,11 @@ return {
     },
     opts = {
         filesystem = {
+            filtered_items = {
+                visible = true,
+            },
             window = {
-                position = 'current',
+                position = 'float',
                 mappings = {
                     ['\\'] = 'close_window',
                     ['l'] = 'open',

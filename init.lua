@@ -161,11 +161,17 @@ vim.opt.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpo
 
 vim.keymap.set('n', '<A-j>', ':move .+1<CR>==')
 vim.keymap.set('n', '<A-k>', ':move .-2<CR>==')
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 -- Paste replace visual selection without copying it.
 vim.keymap.set('v', 'p', '"_dP')
+
 vim.keymap.set('n', '<C-s>', ':w<cr>')
+-- telescope search lsp methods
+vim.keymap.set('n', '<leader>lm', ':Telescope lsp_document_symbols<cr>')
+vim.keymap.set('n', '<leader>tt', ':terminal<cr>');
+
 vim.keymap.set('n', '<leader>gj', ':Gitsigns next_hunk<cr>')
 vim.keymap.set('n', '<leader>gk', ':Gitsigns prev_hunk<cr>')
 vim.keymap.set('n', '<leader>gr', ':Gitsigns reset_hunk<cr>')
@@ -175,12 +181,14 @@ vim.keymap.set('n', '<leader>gr', ':Gitsigns reset_hunk<cr>')
 vim.keymap.set('n', '<leader>gp', ':Gitsigns preview_hunk<cr>')
 vim.keymap.set('n', '<leader>gb', ':Gitsigns toggle_current_line_blame<cr>')
 vim.keymap.set('n', '<leader>ef', ':Neotree action=show source=filesystem position=current toggle=true<cr>')
+vim.keymap.set('n', '<leader>eb', ':Neotree buffers position=right toggle=true <cr>')
+vim.keymap.set('n', '<leader>bt', ':Neotree buffers position=float toggle=true <cr>')
 vim.keymap.set('n', '<leader>tD', function()
     vim.diagnostic.enable(not vim.diagnostic.is_enabled())
 end, { silent = true, noremap = true, desc = 'Toggle diagnostics' })
 
 vim.keymap.set('n', '<leader>td', function()
-  vim.diagnostic.config { virtual_text = not vim.diagnostic.config().virtual_text }
+    vim.diagnostic.config { virtual_text = not vim.diagnostic.config().virtual_text }
 end, { silent = true, noremap = true, desc = 'Toggle diagnostics' })
 
 vim.keymap.set('n', '<leader>ee', function()
@@ -484,6 +492,7 @@ require('lazy').setup({
             vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
             vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
             vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+            vim.keymap.set('n', '<leader>st', builtin.live_grep, { desc = '[S]earch by [T]ext' })
             vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
             vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
             vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
@@ -528,6 +537,7 @@ require('lazy').setup({
                 -- Use a function to dynamically turn signs off
                 -- and on, using buffer local variables
                 signs = true,
+                virtual_lines = false,
                 -- update_in_insert = false,
             })
             require('lsp_lines').setup()
@@ -780,7 +790,7 @@ require('lazy').setup({
         cmd = { 'ConformInfo' },
         keys = {
             {
-                '<leader>fc',
+                '<leader>lf',
                 function()
                     require('conform').format { async = true, lsp_format = 'fallback' }
                 end,
