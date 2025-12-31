@@ -128,6 +128,13 @@ vim.opt.undofile = true
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 
+-- space size 4
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+
+--use space instead of tabs
+vim.opt.expandtab = true
+
 -- Keep signcolumn on by default
 vim.opt.signcolumn = 'yes'
 
@@ -170,7 +177,17 @@ vim.keymap.set('v', 'p', '"_dP')
 vim.keymap.set('n', '<C-s>', ':w<cr>')
 -- telescope search lsp methods
 vim.keymap.set('n', '<leader>lm', ':Telescope lsp_document_symbols<cr>')
-vim.keymap.set('n', '<leader>tt', ':terminal<cr>');
+vim.keymap.set('n', '<leader>tt', ':terminal<cr>')
+
+vim.keymap.set('n', '<leader>m', function()
+    local char = vim.fn.nr2char(vim.fn.getchar()):upper()
+    if char:match '%u' then
+        vim.cmd("normal! '" .. char)
+    end
+end, { noremap = true, desc = 'Ir para marcador global (sem prompt)' })
+-- php
+-- habilita para usar com o intelephense
+-- vim.keymap.set('n', 'gI', ':PhpactorGotoImplementations<cr>')
 
 vim.keymap.set('n', '<leader>gj', ':Gitsigns next_hunk<cr>')
 vim.keymap.set('n', '<leader>gk', ':Gitsigns prev_hunk<cr>')
@@ -447,15 +464,21 @@ require('lazy').setup({
                 --
                 defaults = {
                     mappings = {
-                        i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+                        -- i = { ['<C-enter>'] = 'to_fuzzy_refine' },
+                        i = { ['<C-r>'] = 'to_fuzzy_refine' },
                         n = {
                             ['<C-x>'] = require('telescope.actions').delete_buffer,
                         },
                     },
                     layout_strategy = 'vertical',
                     layout_config = { height = 0.95, width = 0.95 },
+                    file_ignore_patterns = { 'vendor', '.git', 'venv', 'build', 'dist' },
                 },
-                -- pickers = {}
+                pickers = {
+                    lsp_references = {
+                        show_line = false,
+                    },
+                },
                 extensions = {
                     ['ui-select'] = {
                         require('telescope.themes').get_dropdown(),
@@ -489,13 +512,17 @@ require('lazy').setup({
             vim.keymap.set('n', '<leader>gs', builtin.git_status, { desc = '[G]it [S]tatus' })
             vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
             vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
+            vim.keymap.set('n', '<leader>sF', function()
+                builtin.find_files { no_ignore = true }
+            end, { desc = '[S]earch [I]gnored files' })
             vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
             vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
             vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
             vim.keymap.set('n', '<leader>st', builtin.live_grep, { desc = '[S]earch by [T]ext' })
             vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
             vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-            vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+            -- vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+            vim.keymap.set('n', '<leader>s.', builtin.resume, { desc = '[S]earch [.] Resume' })
             vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
             vim.keymap.set('n', '<leader>bl', function()
                 builtin.buffers { initial_mode = 'normal', sort_mru = true }
@@ -860,12 +887,12 @@ require('lazy').setup({
                     -- `friendly-snippets` contains a variety of premade snippets.
                     --    See the README about individual language/framework/plugin snippets:
                     --    https://github.com/rafamadriz/friendly-snippets
-                    -- {
-                    --   'rafamadriz/friendly-snippets',
-                    --   config = function()
-                    --     require('luasnip.loaders.from_vscode').lazy_load()
-                    --   end,
-                    -- },
+                    {
+                        'rafamadriz/friendly-snippets',
+                        config = function()
+                            require('luasnip.loaders.from_vscode').lazy_load()
+                        end,
+                    },
                 },
             },
             'saadparwaiz1/cmp_luasnip',
@@ -1008,6 +1035,12 @@ require('lazy').setup({
             ---@diagnostic disable-next-line: duplicate-set-field
             statusline.section_location = function()
                 return '%2l:%-2v'
+            end
+
+            -- show relative path
+            ---@diagnostic disable-next-line: duplicate-set-field
+            statusline.section_filename = function()
+                return '%f'
             end
 
             -- ... and there is more!
