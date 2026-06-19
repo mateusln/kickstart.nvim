@@ -177,7 +177,7 @@ vim.keymap.set('v', 'p', '"_dP')
 vim.keymap.set('n', '<C-s>', ':w<cr>')
 -- telescope search lsp methods
 vim.keymap.set('n', '<leader>lm', ':Telescope lsp_document_symbols<cr>')
-vim.keymap.set('n', '<leader>tt', ':terminal<cr>')
+
 
 vim.keymap.set('n', '<leader>m', function()
     local char = vim.fn.nr2char(vim.fn.getchar()):upper()
@@ -185,13 +185,23 @@ vim.keymap.set('n', '<leader>m', function()
         vim.cmd("normal! '" .. char)
     end
 end, { noremap = true, desc = 'Ir para marcador global (sem prompt)' })
+--
 -- php
 -- habilita para usar com o intelephense
 -- vim.keymap.set('n', 'gI', ':PhpactorGotoImplementations<cr>')
 
+-- atalhos
+vim.keymap.set('n', '<leader>tt', ':terminal<cr>')
+vim.keymap.set('n', '<leander>nn', ':vnew<cr>')
+vim.keymap.set('n', '<leader>cp', ':let @+=expand("%:p")<CR>', { desc = 'Copiar path absoluto' })
+
 vim.keymap.set('n', '<leader>gj', ':Gitsigns next_hunk<cr>')
 vim.keymap.set('n', '<leader>gk', ':Gitsigns prev_hunk<cr>')
 vim.keymap.set('n', '<leader>gr', ':Gitsigns reset_hunk<cr>')
+-- copia path relativo ao pwd
+vim.keymap.set('n', '<leader>cr', function()
+    vim.fn.setreg('+', vim.fn.fnamemodify(vim.fn.bufname '%', ':.'))
+end, { desc = 'Copiar path relativo' })
 -- vim.keymap.set('n', '<leader>gR', ':Gitsigns reset_buffer<cr>')
 -- vim.keymap.set('n', '<leader>gs', ':Gitsigns stage_hunk<cr>')
 -- vim.keymap.set('n', '<leader>gu', ':Gitsigns undo_stage_hunk<cr>')
@@ -328,6 +338,7 @@ require('lazy').setup({
                 topdelete = { text = '‾' },
                 changedelete = { text = '~' },
             },
+            current_line_blame = true, -- Toggle with `:Gitsigns toggle_current_line_blame`
         },
     },
 
@@ -515,7 +526,13 @@ require('lazy').setup({
             vim.keymap.set('n', '<leader>sF', function()
                 builtin.find_files { no_ignore = true }
             end, { desc = '[S]earch [I]gnored files' })
-            vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+            vim.keymap.set('v', '<leader>ss', function()
+                local saved = vim.fn.getreg 'v'
+                vim.cmd 'noau normal! "vy"'
+                local selection = vim.fn.getreg 'v'
+                vim.fn.setreg('v', saved)
+                builtin.grep_string { search = selection }
+            end, { desc = '[S]earch [S]election' })
             vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
             vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
             vim.keymap.set('n', '<leader>st', builtin.live_grep, { desc = '[S]earch by [T]ext' })
@@ -1022,22 +1039,46 @@ require('lazy').setup({
             -- - sr)'  - [S]urround [R]eplace [)] [']
             require('mini.surround').setup()
 
+            -- Custom highlight for git branch
+
             -- Simple and easy statusline.
             --  You could remove this setup call if you don't like it,
             --  and try some other statusline plugin
             local statusline = require 'mini.statusline'
-            -- set use_icons to true if you have a Nerd Font
-            statusline.setup { use_icons = vim.g.have_nerd_font }
+            vim.api.nvim_set_hl(0, 'MiniStatuslineGit', { fg = '#fbbf24' })
+            statusline.setup {
+                use_icons = vim.g.have_nerd_font,
+                content = {
+                    active = function()
+                        local mode, mode_hl = statusline.section_mode { trunc_width = 120 }
+                        local git           = statusline.section_git { trunc_width = 40 }
+                        local diff          = statusline.section_diff { trunc_width = 75 }
+                        local diagnostics   = statusline.section_diagnostics { trunc_width = 75 }
+                        local lsp           = statusline.section_lsp { trunc_width = 75 }
+                        local filename      = statusline.section_filename { trunc_width = 140 }
+                        local fileinfo      = statusline.section_fileinfo { trunc_width = 120 }
+                        local location      = statusline.section_location { trunc_width = 75 }
+                        local search        = statusline.section_searchcount { trunc_width = 75 }
 
-            -- You can configure sections in the statusline by overriding their
-            -- default behavior. For example, here we set the section for
-            -- cursor location to LINE:COLUMN
+                        return statusline.combine_groups {
+                            { hl = mode_hl,                  strings = { mode } },
+                            { hl = 'MiniStatuslineFilename', strings = { filename } },
+                            '%=',
+                            { hl = 'MiniStatuslineDevinfo',  strings = { diagnostics, lsp } },
+                            { hl = 'MiniStatuslineDevinfo',  strings = { diff } },
+                            -- { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
+                            { hl = mode_hl,                  strings = { search, location } },
+                            { hl = 'MiniStatuslineGit',     strings = { git } },
+                        }
+                    end,
+                },
+            }
+
             ---@diagnostic disable-next-line: duplicate-set-field
             statusline.section_location = function()
                 return '%2l:%-2v'
             end
 
-            -- show relative path
             ---@diagnostic disable-next-line: duplicate-set-field
             statusline.section_filename = function()
                 return '%f'
@@ -1116,6 +1157,13 @@ require('lazy').setup({
         },
     },
 })
+
+-- vim.lsp.config['phpantom'] = {
+--     cmd = { '/home/mateus/phpantom_lsp' },
+--     filetypes = { 'php' },
+--     root_markers = { 'composer.json', '.git' },
+-- }
+-- vim.lsp.enable 'phpantom'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
